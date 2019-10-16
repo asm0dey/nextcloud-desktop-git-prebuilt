@@ -1,10 +1,10 @@
 language: minimal
 script:
   - 'docker build -t makepkg .'
-  - 'git clone https://aur.archlinux.org/nextcloud-desktop-git.git nextcloud'
+  - 'git clone --depth=1 https://aur.archlinux.org/nextcloud-desktop-git.git nextcloud'
   - '(test -f 000*.patch && cd kodi && git apply ../*.patch) || true'
   - 'mkdir -p cache'
-  - 'sudo chown -R 1000 nexrtcloud'
+  - 'sudo chown -R 1000 nextcloud'
   - 'sudo chown -R 1000 cache'
   - 'chmod +x build.sh'
   - ./build.sh
