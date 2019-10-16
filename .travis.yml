@@ -1,0 +1,51 @@
+language: minimal
+script:
+  - 'docker build -t makepkg .'
+  - 'git clone https://aur.archlinux.org/nextcloud-desktop-git.git nextcloud'
+  - '(test -f 000*.patch && cd kodi && git apply ../*.patch) || true'
+  - 'mkdir -p cache'
+  - 'sudo chown -R 1000 nexrtcloud'
+  - 'sudo chown -R 1000 cache'
+  - 'chmod +x build.sh'
+  - ./build.sh
+  - 'sudo chown -R "$(whoami)" cache'
+  - 'sudo chown -R "$(whoami)" nextcloud'
+  - 'mkdir -p dist/x86_64'
+  - 'find nextcloud -name ''*.tar.xz'' -exec mv {} dist/x86_64 \;'
+  - 'sudo chown -R 1000 dist'
+  - 'docker run -v "$(pwd)"/dist/x86_64:/home/builder/dist -i makepkg bash -c ''cd dist && repo-add nextcloud-desktop-git-prebuilt.db.tar.xz *.tar.xz'''
+  - 'sudo chown -R "$(whoami)" dist'
+cache:
+  directories:
+    - cache
+deploy:
+  -
+    provider: releases
+    api_key:
+      secure: FU3jFXI7vHVdhQPcw2BUMnRwwUGEeaz4YGf57RcNniZMR+07llXUtohCLkKfH57xoZfftChPFCftMKhcvI5WX5L90CDbhzdNbN5e2U4VGKqmb0Di2/HehXfzxi1/TbX8EVAz9edMybsM9Wx2sangVLUxlBA/AfhRAhJTvKTeRWlU23tJ6gQR+CQtO0CuStwX3OAdoZYNC3qI7mQw6jS8t1gDb4t3oNe18u0HnyeN7p7nVNuO9zGDJPxVPF4MeMALw6lvlq51NqMkBzb+X5WXfWZPFaug6yB4MGtRjARo+U3YdkNTMy2tm5MTKxQs9ZWnHXnAiz4E1jakQsBv71aJR8+eOMbtcydEWIcMpawFf/tiqvFNbhVHu9GyocsO8MhpPU1E72mowKZ8MmjqF+s7xUkU1Vb7dNiTY8gYSgEw91jKNauy7vE+y/Xgott1AzWie7srxPOqi1pq6h8aLzfogPvb7mWGVOvzXWJi7o51t5NoP93JK0np6VH3BnXg6Da+mfSVikL1p+JAS/7LvOlSyNsqHZga49RPnkYOdmRMvHIY5AubAPZ0ArPeYd3n62gJ9qJRHNrudbEQVnXncx2jYoPv6+A7YfwgWKjDpyKn+/dKGrJzZrQwZAstHjPlP8gWvLip0SpgSNZMC8+AED+MHtFXyYrQQ3kYFsFtLEBILZs=
+    file: 'dist/x86_64/*'
+    file_glob: true
+    on:
+      tags: true
+    skip_cleanup: true
+  -
+    provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    target_branch: gh-pages
+    keep_history: false
+    deployment_file: true
+    local_dir: dist
+    on:
+      tags: true
+  -
+    provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    target_branch: gh-pages
+    keep_history: false
+    deployment_file: true
+    local_dir: dist
+    on:
+      branch: master
+
